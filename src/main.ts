@@ -3,7 +3,6 @@ import * as THREE from 'three'
 import './style.css'
 
 import { Stickman } from './player/Stickman'
-
 import { Joystick } from './input/Joystick'
 
 
@@ -11,52 +10,44 @@ import { Joystick } from './input/Joystick'
 // Scene
 // ======================================================
 
+const scene = new THREE.Scene()
 
-
-
-
-const scene =
-    new THREE.Scene()
-
-
-scene.background =
-    new THREE.Color(
-        0x050608
-    )
+scene.background = new THREE.Color(0x050608)
 
 
 // ======================================================
 // Camera
 // ======================================================
 
-const camera =
-    new THREE.PerspectiveCamera(
-        50,
+const camera = new THREE.PerspectiveCamera(
+    50,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1000
+)
 
-        window.innerWidth /
-        window.innerHeight,
 
-        0.1,
-
-        1000
-    )
+// Начальная позиция камеры.
+// В animate() она потом будет следовать за игроком.
+camera.position.set(
+    0,
+    14,
+    16
+)
 
 
 // ======================================================
 // Renderer
 // ======================================================
 
-const renderer =
-    new THREE.WebGLRenderer({
-        antialias: true
-    })
-
+const renderer = new THREE.WebGLRenderer({
+    antialias: true
+})
 
 renderer.setSize(
     window.innerWidth,
     window.innerHeight
 )
-
 
 renderer.setPixelRatio(
     Math.min(
@@ -65,10 +56,10 @@ renderer.setPixelRatio(
     )
 )
 
+renderer.shadowMap.enabled = true
 
-renderer.shadowMap.enabled =
-    true
-
+renderer.shadowMap.type =
+    THREE.PCFSoftShadowMap
 
 document.body.appendChild(
     renderer.domElement
@@ -86,7 +77,6 @@ const hemisphereLight =
         2
     )
 
-
 scene.add(
     hemisphereLight
 )
@@ -98,17 +88,13 @@ const directionalLight =
         3
     )
 
-
 directionalLight.position.set(
     -5,
     12,
     8
 )
 
-
-directionalLight.castShadow =
-    true
-
+directionalLight.castShadow = true
 
 scene.add(
     directionalLight
@@ -119,18 +105,24 @@ scene.add(
 // Map
 // ======================================================
 
+const groundGeometry =
+    new THREE.PlaneGeometry(
+        60,
+        40
+    )
+
+
+const groundMaterial =
+    new THREE.MeshStandardMaterial({
+        color: 0x0b0d12,
+        roughness: 0.9
+    })
+
+
 const ground =
     new THREE.Mesh(
-
-        new THREE.PlaneGeometry(
-            60,
-            40
-        ),
-
-        new THREE.MeshStandardMaterial({
-            color: 0x0b0d12,
-            roughness: 0.9
-        })
+        groundGeometry,
+        groundMaterial
     )
 
 
@@ -155,7 +147,6 @@ const grid =
     new THREE.GridHelper(
         60,
         30,
-
         0x25304a,
         0x151923
     )
@@ -171,16 +162,14 @@ scene.add(
 
 
 // ======================================================
-// Stickman
+// Player
 // ======================================================
 
 const player =
     new Stickman(
         0x17bfff
     )
-animate()
-const joystick =
-    new Joystick()
+
 
 scene.add(
     player.group
@@ -188,7 +177,15 @@ scene.add(
 
 
 // ======================================================
-// Movement
+// Joystick
+// ======================================================
+
+const joystick =
+    new Joystick()
+
+
+// ======================================================
+// Keyboard
 // ======================================================
 
 const keys: Record<string, boolean> =
@@ -199,8 +196,9 @@ window.addEventListener(
     'keydown',
     (event) => {
 
-        keys[event.key.toLowerCase()] =
-            true
+        keys[
+            event.key.toLowerCase()
+        ] = true
     }
 )
 
@@ -209,11 +207,16 @@ window.addEventListener(
     'keyup',
     (event) => {
 
-        keys[event.key.toLowerCase()] =
-            false
+        keys[
+            event.key.toLowerCase()
+        ] = false
     }
 )
 
+
+// ======================================================
+// Movement variables
+// ======================================================
 
 const velocity =
     new THREE.Vector3()
@@ -223,6 +226,26 @@ const direction =
     new THREE.Vector3()
 
 
+const desiredVelocity =
+    new THREE.Vector3()
+
+
+// ======================================================
+// Camera helper vectors
+// ======================================================
+
+const cameraTarget =
+    new THREE.Vector3()
+
+
+const cameraLookTarget =
+    new THREE.Vector3()
+
+
+// ======================================================
+// Player settings
+// ======================================================
+
 const MOVE_SPEED =
     5.5
 
@@ -230,6 +253,26 @@ const MOVE_SPEED =
 const ACCELERATION =
     12
 
+
+const ROTATION_SPEED =
+    12
+
+
+// ======================================================
+// Map limits
+// ======================================================
+
+const MAP_LIMIT_X =
+    28
+
+
+const MAP_LIMIT_Z =
+    18
+
+
+// ======================================================
+// Player rotation
+// ======================================================
 
 let currentAngle =
     0
@@ -244,7 +287,7 @@ const clock =
 
 
 // ======================================================
-// Animation
+// Main game loop
 // ======================================================
 
 function animate() {
@@ -254,6 +297,10 @@ function animate() {
     )
 
 
+    // --------------------------------------------------
+    // Delta time
+    // --------------------------------------------------
+
     const dt =
         Math.min(
             clock.getDelta(),
@@ -261,9 +308,9 @@ function animate() {
         )
 
 
-    // ==============================================
-    // Input
-    // ==============================================
+    // ==================================================
+    // INPUT
+    // ==================================================
 
     let inputX =
         0
@@ -273,12 +320,39 @@ function animate() {
         0
 
 
+    // --------------------------------------------------
+    // Joystick input
+    //
+    // joystick.direction:
+    //
+    // x:
+    // -1 = left
+    //  1 = right
+    //
+    // y:
+    // -1 = up
+    //  1 = down
+    // --------------------------------------------------
+
+    inputX +=
+        joystick.direction.x
+
+
+    inputZ +=
+        joystick.direction.y
+
+
+    // --------------------------------------------------
+    // Keyboard input
+    // --------------------------------------------------
+
     if (
         keys['w'] ||
         keys['arrowup']
     ) {
 
-        inputZ -= 1
+        inputZ -=
+            1
     }
 
 
@@ -287,7 +361,8 @@ function animate() {
         keys['arrowdown']
     ) {
 
-        inputZ += 1
+        inputZ +=
+            1
     }
 
 
@@ -296,7 +371,8 @@ function animate() {
         keys['arrowleft']
     ) {
 
-        inputX -= 1
+        inputX -=
+            1
     }
 
 
@@ -305,9 +381,14 @@ function animate() {
         keys['arrowright']
     ) {
 
-        inputX += 1
+        inputX +=
+            1
     }
 
+
+    // ==================================================
+    // Direction
+    // ==================================================
 
     direction.set(
         inputX,
@@ -316,31 +397,39 @@ function animate() {
     )
 
 
+    // Если одновременно работает joystick + keyboard,
+    // длина вектора может стать > 1.
+    //
+    // Также это исправляет слишком быстрое движение
+    // по диагонали.
+
     if (
-        direction.length() > 1
+        direction.lengthSq() >
+        1
     ) {
 
         direction.normalize()
     }
 
 
-    // ==============================================
+    // ==================================================
     // Desired velocity
-    // ==============================================
+    // ==================================================
 
-    const desiredVelocity =
-        direction
-            .clone()
-            .multiplyScalar(
-                MOVE_SPEED
-            )
+    desiredVelocity
+        .copy(
+            direction
+        )
+        .multiplyScalar(
+            MOVE_SPEED
+        )
 
 
-    // ==============================================
-    // Smooth acceleration
-    // ==============================================
+    // ==================================================
+    // Smooth acceleration / braking
+    // ==================================================
 
-    const acceleration =
+    const accelerationFactor =
         1 -
         Math.exp(
             -ACCELERATION *
@@ -350,29 +439,51 @@ function animate() {
 
     velocity.lerp(
         desiredVelocity,
-        acceleration
+        accelerationFactor
     )
 
 
-    // ==============================================
-    // Move
-    // ==============================================
+    // ==================================================
+    // Player movement
+    // ==================================================
 
     player.group.position.x +=
-        velocity.x * dt
+        velocity.x *
+        dt
 
 
     player.group.position.z +=
-        velocity.z * dt
+        velocity.z *
+        dt
 
 
-    // ==============================================
-    // Rotate player
-    // ==============================================
+    // ==================================================
+    // Map boundaries
+    // ==================================================
+
+    player.group.position.x =
+        THREE.MathUtils.clamp(
+            player.group.position.x,
+            -MAP_LIMIT_X,
+            MAP_LIMIT_X
+        )
+
+
+    player.group.position.z =
+        THREE.MathUtils.clamp(
+            player.group.position.z,
+            -MAP_LIMIT_Z,
+            MAP_LIMIT_Z
+        )
+
+
+    // ==================================================
+    // Player rotation
+    // ==================================================
 
     if (
         direction.lengthSq() >
-        0.01
+        0.001
     ) {
 
         const targetAngle =
@@ -382,6 +493,9 @@ function animate() {
             )
 
 
+        // Получаем кратчайший путь между углами,
+        // чтобы персонаж не делал лишний оборот.
+
         let difference =
             targetAngle -
             currentAngle
@@ -389,19 +503,27 @@ function animate() {
 
         difference =
             Math.atan2(
-                Math.sin(difference),
-                Math.cos(difference)
+                Math.sin(
+                    difference
+                ),
+
+                Math.cos(
+                    difference
+                )
+            )
+
+
+        const rotationFactor =
+            1 -
+            Math.exp(
+                -ROTATION_SPEED *
+                dt
             )
 
 
         currentAngle +=
             difference *
-            (
-                1 -
-                Math.exp(
-                    -12 * dt
-                )
-            )
+            rotationFactor
 
 
         player.group.rotation.y =
@@ -409,9 +531,9 @@ function animate() {
     }
 
 
-    // ==============================================
-    // Player animation
-    // ==============================================
+    // ==================================================
+    // Stickman animation
+    // ==================================================
 
     const speed =
         velocity.length()
@@ -423,49 +545,57 @@ function animate() {
     )
 
 
-    // ==============================================
+    // ==================================================
     // Camera follow
-    // ==============================================
+    // ==================================================
 
     const playerPosition =
         player.group.position
 
 
-    const cameraTarget =
-        new THREE.Vector3(
+    // Камера достаточно далеко,
+    // чтобы позднее видеть союзников,
+    // врагов и больше карты.
 
-            playerPosition.x,
+    cameraTarget.set(
+        playerPosition.x,
+        14,
+        playerPosition.z + 16
+    )
 
-            14,
 
-            playerPosition.z + 16
+    const cameraSmooth =
+        1 -
+        Math.exp(
+            -5 *
+            dt
         )
 
 
     camera.position.lerp(
-
         cameraTarget,
-
-        1 -
-        Math.exp(
-            -5 * dt
-        )
+        cameraSmooth
     )
 
 
-    camera.lookAt(
+    // Камера смотрит немного вперёд
+    // относительно героя.
 
+    cameraLookTarget.set(
         playerPosition.x,
-
         1,
-
         playerPosition.z - 2
     )
 
 
-    // ==============================================
+    camera.lookAt(
+        cameraLookTarget
+    )
+
+
+    // ==================================================
     // Render
-    // ==============================================
+    // ==================================================
 
     renderer.render(
         scene,
@@ -473,6 +603,13 @@ function animate() {
     )
 }
 
+
+// ======================================================
+// Start game
+// ======================================================
+
+// ВАЖНО:
+// animate() вызываем ТОЛЬКО ОДИН РАЗ.
 
 animate()
 
@@ -497,6 +634,13 @@ window.addEventListener(
             window.innerWidth,
             window.innerHeight
         )
+
+
+        renderer.setPixelRatio(
+            Math.min(
+                window.devicePixelRatio,
+                2
+            )
+        )
     }
 )
-
