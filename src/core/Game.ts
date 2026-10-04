@@ -1,40 +1,55 @@
 import * as THREE from 'three'
 
-import { Stickman } from '../player/Stickman'
+import { MobaUnit } from '../player/MobaUnit'
 import { Joystick } from '../input/Joystick'
 import { PlayerController } from '../input/PlayerController'
 import { MobaCamera } from '../camera/MobaCamera'
 import { GameMap } from '../world/GameMap'
-
+import { AttackSystem } from '../combat/AttackSystem'
 
 export class Game {
+
+    private readonly attackSystem:
+        AttackSystem
 
     private readonly scene =
         new THREE.Scene()
 
-
     private readonly renderer:
         THREE.WebGLRenderer
-
 
     private readonly camera:
         MobaCamera
 
-
     private readonly gameMap:
         GameMap
-
-
-    private readonly player:
-        Stickman
-
 
     private readonly joystick:
         Joystick
 
-
     private readonly playerController:
         PlayerController
+
+    private readonly player:
+        MobaUnit
+
+
+    // Все персонажи
+    private readonly units:
+        MobaUnit[] =
+        []
+
+
+    // Союзники
+    private readonly allies:
+        MobaUnit[] =
+        []
+
+
+    // Враги
+    private readonly enemies:
+        MobaUnit[] =
+        []
 
 
     private readonly clock =
@@ -111,17 +126,81 @@ export class Game {
 
 
         // ==========================================
-        // Player
+        // PLAYER
         // ==========================================
 
         this.player =
-            new Stickman(
-                0x17bfff
+            this.createUnit(
+                'Player',
+                1,
+                'ally',
+                0x17bfff,
+                0,
+                4
             )
 
 
-        this.scene.add(
-            this.player.group
+        // ==========================================
+        // ALLIES
+        // ==========================================
+
+        const ally1 =
+            this.createUnit(
+                'Nova',
+                1,
+                'ally',
+                0x479cff,
+                -5,
+                0
+            )
+
+
+        const ally2 =
+            this.createUnit(
+                'Volt',
+                1,
+                'ally',
+                0x716cff,
+                5,
+                0
+            )
+
+
+        this.allies.push(
+            ally1,
+            ally2
+        )
+
+
+        // ==========================================
+        // ENEMIES
+        // ==========================================
+
+        const enemy1 =
+            this.createUnit(
+                'Raze',
+                1,
+                'enemy',
+                0xff3d4d,
+                -5,
+                -8
+            )
+
+
+        const enemy2 =
+            this.createUnit(
+                'Blaze',
+                1,
+                'enemy',
+                0xff643d,
+                5,
+                -8
+            )
+
+
+        this.enemies.push(
+            enemy1,
+            enemy2
         )
 
 
@@ -134,17 +213,25 @@ export class Game {
 
 
         // ==========================================
-        // Controller
+        // Player Controller
         // ==========================================
 
         this.playerController =
             new PlayerController(
-                this.player,
+
+                // MobaUnit содержит Stickman
+                this.player.stickman,
+
                 this.joystick,
+
                 this.gameMap
             )
 
-
+        this.attackSystem =
+            new AttackSystem(
+                this.player,
+                this.enemies
+            )
         // ==========================================
         // Camera
         // ==========================================
@@ -161,6 +248,49 @@ export class Game {
             'resize',
             this.handleResize
         )
+    }
+
+
+    // ==============================================
+    // Create Unit
+    // ==============================================
+
+    private createUnit(
+        name: string,
+        level: number,
+        team: 'ally' | 'enemy',
+        color: number,
+        x: number,
+        z: number
+    ): MobaUnit {
+
+        const unit =
+            new MobaUnit(
+                name,
+                level,
+                team,
+                color,
+                100
+            )
+
+
+        unit.setPosition(
+            x,
+            z
+        )
+
+
+        this.scene.add(
+            unit.group
+        )
+
+
+        this.units.push(
+            unit
+        )
+
+
+        return unit
     }
 
 
@@ -220,7 +350,7 @@ export class Game {
 
 
     // ==============================================
-    // Main game loop
+    // Main Game Loop
     // ==============================================
 
     private animate =
@@ -238,14 +368,48 @@ export class Game {
                 )
 
 
-            // Player
+            // ======================================
+            // Player movement
+            // ======================================
 
             this.playerController.update(
                 dt
             )
 
 
+            // ======================================
+            // Allies idle animation
+            // ======================================
+
+            for (
+                const ally
+                of this.allies
+            ) {
+
+                ally.update(
+                    dt
+                )
+            }
+
+
+            // ======================================
+            // Enemies idle animation
+            // ======================================
+
+            for (
+                const enemy
+                of this.enemies
+            ) {
+
+                enemy.update(
+                    dt
+                )
+            }
+
+
+            // ======================================
             // Camera
+            // ======================================
 
             this.camera.update(
                 dt,
@@ -253,7 +417,30 @@ export class Game {
             )
 
 
+            // Нужно для правильного
+            // преобразования 3D → экран
+            this.camera.camera
+                .updateMatrixWorld()
+
+
+            // ======================================
+            // Unit UI
+            // ======================================
+
+            for (
+                const unit
+                of this.units
+            ) {
+
+                unit.updateUI(
+                    this.camera.camera
+                )
+            }
+
+
+            // ======================================
             // Render
+            // ======================================
 
             this.renderer.render(
                 this.scene,

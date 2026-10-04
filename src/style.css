@@ -286,3 +286,76 @@ canvas {
 
     color: #ffb8bd;
 }
+
+
+/* =====================================================
+   ATTACK BUTTON
+   ===================================================== */
+
+#attack-button {
+    position: fixed;
+
+    right: 55px;
+    bottom: 55px;
+
+    width: 110px;
+    height: 110px;
+
+    border-radius: 50%;
+
+    border:
+        3px solid
+        rgba(255, 130, 130, 0.8);
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(255, 80, 80, 0.95),
+            rgba(140, 20, 30, 0.95)
+        );
+
+    color: white;
+
+    font-size: 15px;
+    font-weight: 800;
+
+    letter-spacing: 1px;
+
+    cursor: pointer;
+
+    user-select: none;
+    touch-action: none;
+
+    z-index: 100;
+
+    box-shadow:
+        0 0 25px
+        rgba(255, 50, 60, 0.35);
+
+    transition:
+        transform 0.08s ease,
+        opacity 0.15s ease;
+}
+
+
+#attack-button:active {
+    transform:
+        scale(0.92);
+}
+
+
+#attack-button.cooldown {
+    opacity: 0.45;
+
+    cursor: default;
+}
+
+
+#attack-button.too-far {
+    background:
+        radial-gradient(
+            circle,
+            #777,
+            #292929
+        );
+}
