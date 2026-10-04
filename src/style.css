@@ -102,3 +102,187 @@ canvas {
 
     pointer-events: none;
 }
+
+
+/* =====================================================
+   UNIT UI
+   ===================================================== */
+
+.unit-ui {
+    position: fixed;
+
+    left: 0;
+    top: 0;
+
+    width: 110px;
+
+    pointer-events: none;
+    user-select: none;
+
+    z-index: 50;
+
+    font-family:
+        Arial,
+        sans-serif;
+
+    text-align: center;
+
+    will-change: transform;
+}
+
+
+.unit-title {
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
+    gap: 5px;
+
+    margin-bottom: 4px;
+
+    white-space: nowrap;
+}
+
+
+.unit-level {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 20px;
+    height: 20px;
+
+    border-radius: 50%;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    color: white;
+
+    background:
+        rgba(
+            10,
+            12,
+            18,
+            0.9
+        );
+
+    border:
+        1px solid
+        rgba(
+            255,
+            255,
+            255,
+            0.35
+        );
+}
+
+
+.unit-name {
+    font-size: 12px;
+
+    font-weight: 700;
+
+    color: white;
+
+    text-shadow:
+        0 1px 3px black,
+        0 0 4px black;
+}
+
+
+/* =====================================================
+   HEALTH BAR
+   ===================================================== */
+
+.unit-health {
+    width: 100%;
+    height: 9px;
+
+    overflow: hidden;
+
+    border-radius: 5px;
+
+    background:
+        rgba(
+            15,
+            15,
+            18,
+            0.9
+        );
+
+    border:
+        1px solid
+        rgba(
+            255,
+            255,
+            255,
+            0.25
+        );
+
+    box-shadow:
+        0 1px 4px
+        rgba(
+            0,
+            0,
+            0,
+            0.8
+        );
+}
+
+
+.unit-health-fill {
+    width: 100%;
+    height: 100%;
+
+    transition:
+        width 0.15s ease;
+}
+
+
+/* Ally HP */
+
+.unit-ui.ally
+.unit-health-fill {
+
+    background:
+        linear-gradient(
+            90deg,
+            #16b85a,
+            #48ef86
+        );
+}
+
+
+/* Enemy HP */
+
+.unit-ui.enemy
+.unit-health-fill {
+
+    background:
+        linear-gradient(
+            90deg,
+            #d92d3b,
+            #ff5260
+        );
+}
+
+
+/* Ally name */
+
+.unit-ui.ally
+.unit-name {
+
+    color: #dff6ff;
+}
+
+
+/* Enemy name */
+
+.unit-ui.enemy
+.unit-name {
+
+    color: #ffb8bd;
+}
