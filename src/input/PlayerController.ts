@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 
-import { Stickman } from '../player/Stickman'
+import { MobaUnit } from '../player/MobaUnit'
 import { Joystick } from './Joystick'
 import { GameMap } from '../world/GameMap'
 
@@ -8,12 +8,10 @@ import { GameMap } from '../world/GameMap'
 export class PlayerController {
 
     private readonly player:
-        Stickman
-
+        MobaUnit
 
     private readonly joystick:
         Joystick
-
 
     private readonly gameMap:
         GameMap
@@ -53,7 +51,7 @@ export class PlayerController {
 
 
     constructor(
-        player: Stickman,
+        player: MobaUnit,
         joystick: Joystick,
         gameMap: GameMap
     ) {
@@ -61,10 +59,8 @@ export class PlayerController {
         this.player =
             player
 
-
         this.joystick =
             joystick
-
 
         this.gameMap =
             gameMap
@@ -82,9 +78,7 @@ export class PlayerController {
 
         window.addEventListener(
             'keydown',
-            (
-                event
-            ) => {
+            (event) => {
 
                 this.keys[
                     event.key.toLowerCase()
@@ -95,9 +89,7 @@ export class PlayerController {
 
         window.addEventListener(
             'keyup',
-            (
-                event
-            ) => {
+            (event) => {
 
                 this.keys[
                     event.key.toLowerCase()
@@ -115,6 +107,44 @@ export class PlayerController {
         dt: number
     ) {
 
+        // ==========================================
+        // Dead player
+        // ==========================================
+
+        if (
+            this.player.isDead()
+        ) {
+
+            this.velocity.set(
+                0,
+                0,
+                0
+            )
+
+
+            this.direction.set(
+                0,
+                0,
+                0
+            )
+
+
+            // Важно:
+            // MobaUnit считает respawn timer
+            this.player.update(
+                dt,
+                0
+            )
+
+
+            return
+        }
+
+
+        // ==========================================
+        // Input
+        // ==========================================
+
         let inputX =
             this.joystick.direction.x
 
@@ -123,17 +153,12 @@ export class PlayerController {
             this.joystick.direction.y
 
 
-        // ==========================================
-        // Keyboard input
-        // ==========================================
-
         if (
             this.keys['w'] ||
             this.keys['arrowup']
         ) {
 
-            inputZ -=
-                1
+            inputZ -= 1
         }
 
 
@@ -142,8 +167,7 @@ export class PlayerController {
             this.keys['arrowdown']
         ) {
 
-            inputZ +=
-                1
+            inputZ += 1
         }
 
 
@@ -152,8 +176,7 @@ export class PlayerController {
             this.keys['arrowleft']
         ) {
 
-            inputX -=
-                1
+            inputX -= 1
         }
 
 
@@ -162,8 +185,7 @@ export class PlayerController {
             this.keys['arrowright']
         ) {
 
-            inputX +=
-                1
+            inputX += 1
         }
 
 
@@ -188,7 +210,7 @@ export class PlayerController {
 
 
         // ==========================================
-        // Desired velocity
+        // Velocity
         // ==========================================
 
         this.desiredVelocity
@@ -199,10 +221,6 @@ export class PlayerController {
                 this.moveSpeed
             )
 
-
-        // ==========================================
-        // Smooth acceleration
-        // ==========================================
 
         const accelerationFactor =
             1 -
@@ -219,7 +237,7 @@ export class PlayerController {
 
 
         // ==========================================
-        // Move
+        // Movement
         // ==========================================
 
         this.player.group.position.x +=
@@ -231,10 +249,6 @@ export class PlayerController {
             this.velocity.z *
             dt
 
-
-        // ==========================================
-        // Map limits
-        // ==========================================
 
         this.gameMap.clampPosition(
             this.player.group.position
@@ -251,7 +265,7 @@ export class PlayerController {
 
 
         // ==========================================
-        // Stickman animation
+        // Animation + MobaUnit update
         // ==========================================
 
         this.player.update(
@@ -320,11 +334,8 @@ export class PlayerController {
     }
 
 
-    // ==============================================
-    // Useful later for combat
-    // ==============================================
-
-    public getSpeed(): number {
+    public getSpeed():
+        number {
 
         return this.velocity.length()
     }

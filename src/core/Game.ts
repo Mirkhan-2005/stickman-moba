@@ -6,11 +6,9 @@ import { PlayerController } from '../input/PlayerController'
 import { MobaCamera } from '../camera/MobaCamera'
 import { GameMap } from '../world/GameMap'
 import { AttackSystem } from '../combat/AttackSystem'
+import { BotController } from '../bots/BotController'
 
 export class Game {
-
-    private readonly attackSystem:
-        AttackSystem
 
     private readonly scene =
         new THREE.Scene()
@@ -49,6 +47,10 @@ export class Game {
     // Враги
     private readonly enemies:
         MobaUnit[] =
+        []
+
+    private readonly enemyBots:
+        BotController[] =
         []
 
 
@@ -220,18 +222,35 @@ export class Game {
             new PlayerController(
 
                 // MobaUnit содержит Stickman
-                this.player.stickman,
+                this.player,
 
                 this.joystick,
 
                 this.gameMap
             )
 
-        this.attackSystem =
+
+
             new AttackSystem(
                 this.player,
                 this.enemies
             )
+
+
+        this.enemyBots.push(
+
+            new BotController(
+                enemy1,
+                this.player,
+                this.gameMap
+            ),
+
+            new BotController(
+                enemy2,
+                this.player,
+                this.gameMap
+            )
+        )
         // ==========================================
         // Camera
         // ==========================================
@@ -395,16 +414,6 @@ export class Game {
             // ======================================
             // Enemies idle animation
             // ======================================
-
-            for (
-                const enemy
-                of this.enemies
-            ) {
-
-                enemy.update(
-                    dt
-                )
-            }
 
 
             // ======================================
