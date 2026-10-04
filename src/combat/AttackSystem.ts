@@ -159,8 +159,33 @@ export class AttackSystem {
         // Damage
         // ==========================================
 
-        target.takeDamage(
-            this.damage
+
+
+
+        // запускаем удар stickman
+
+        this.player.stickman
+            .playAttack()
+
+
+        // Damage немного позже,
+        // чтобы удар совпадал с движением руки
+
+        setTimeout(
+            () => {
+
+                if (
+                    !target.isDead()
+                ) {
+
+                    target.takeDamage(
+                        this.damage
+                    )
+                }
+
+            },
+
+            120
         )
 
 

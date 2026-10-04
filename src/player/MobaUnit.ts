@@ -205,15 +205,23 @@ export class MobaUnit {
     // Position
     // ==============================================
 
+
+
+
     public setPosition(
-        x: number,
-        z: number
+    x: number,
+    z: number
     ) {
 
         this.group.position.set(
             x,
             0,
             z
+        )
+
+
+        this.spawnPosition.copy(
+            this.group.position
         )
     }
 
@@ -222,10 +230,41 @@ export class MobaUnit {
     // Animation
     // ==============================================
 
+
+
     public update(
-        dt: number,
-        speed: number = 0
+    dt: number,
+    speed: number = 0
     ) {
+
+        // ==========================================
+        // Dead
+        // ==========================================
+
+        if (
+            this.dead
+        ) {
+
+            this.respawnTimer -=
+                dt
+
+
+            if (
+                this.respawnTimer <=
+                0
+            ) {
+
+                this.respawn()
+            }
+
+
+            return
+        }
+
+
+        // ==========================================
+        // Animation
+        // ==========================================
 
         this.stickman.update(
             dt,
@@ -238,9 +277,22 @@ export class MobaUnit {
     // Damage
     // ==============================================
 
+
+
+
+
+
     public takeDamage(
-        damage: number
+    damage: number
     ) {
+
+        if (
+            this.dead
+        ) {
+
+            return
+        }
+
 
         this.health =
             THREE.MathUtils.clamp(
@@ -254,8 +306,16 @@ export class MobaUnit {
 
 
         this.updateHealthBar()
-    }
 
+
+        if (
+            this.health <=
+            0
+        ) {
+
+            this.die()
+        }
+    }
 
     // ==============================================
     // Health
@@ -279,13 +339,29 @@ export class MobaUnit {
     }
 
 
+
+
     public isDead(): boolean {
 
-        return (
-            this.health <=
-            0
-        )
-    }
+    return this.dead
+}
+
+    private dead =
+    false
+
+
+    private respawnTimer =
+        0
+
+
+    private readonly respawnDelay =
+        5
+
+
+    private readonly spawnPosition =
+        new THREE.Vector3()
+
+
 
 
     private updateHealthBar() {
@@ -302,6 +378,61 @@ export class MobaUnit {
     }
 
 
+
+    private die() {
+
+    this.dead =
+        true
+
+
+    this.respawnTimer =
+        this.respawnDelay
+
+
+    // персонаж исчезает
+    this.group.visible =
+        false
+
+
+    // UI исчезает
+    this.ui.style.display =
+        'none'
+    }
+
+
+    private respawn() {
+
+        this.dead =
+            false
+
+
+        this.health =
+            this.maxHealth
+
+
+        this.updateHealthBar()
+
+
+        // Возвращаем на spawn
+        this.group.position.copy(
+            this.spawnPosition
+        )
+
+
+        this.group.visible =
+            true
+    }
+
+
+
+
+
+
+
+
+
+
+
     // ==============================================
     // UI position
     // ==============================================
@@ -310,6 +441,16 @@ export class MobaUnit {
         camera:
             THREE.Camera
     ) {
+
+    if (
+        this.dead
+    ) {
+
+        this.ui.style.display =
+            'none'
+
+        return
+    }
 
         // Position above head
 

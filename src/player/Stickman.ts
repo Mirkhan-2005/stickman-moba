@@ -16,6 +16,11 @@ export class Stickman {
 
     private walkTime = 0
 
+
+    private attackTime = 0
+
+    private readonly attackDuration = 0.3
+
     private bodyMaterial: THREE.MeshStandardMaterial
 
 
@@ -353,10 +358,68 @@ export class Stickman {
     // UPDATE ANIMATION
     // ==============================================
 
+    public playAttack() {
+
+        this.attackTime =
+            this.attackDuration
+}
+
     public update(
         dt: number,
         speed: number
     ) {
+
+        if (
+    this.attackTime >
+    0
+) {
+
+    this.attackTime -=
+        dt
+
+
+    const progress =
+        1 -
+        Math.max(
+            this.attackTime,
+            0
+        ) /
+        this.attackDuration
+
+
+    const swing =
+        Math.sin(
+            progress *
+            Math.PI
+        )
+
+
+    // Правая рука резко бьёт вперёд
+    this.rightArm.rotation.x =
+        -1.8 *
+        swing
+
+
+    // Левая немного уходит назад
+    this.leftArm.rotation.x =
+        0.35 *
+        swing
+
+
+    // Небольшой наклон корпуса
+    this.visual.rotation.x =
+        -0.18 *
+        swing
+
+
+    this.visual.position.y =
+        0
+
+
+    return
+}
+
+
 
         const moving =
             speed > 0.05
